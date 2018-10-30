@@ -1,0 +1,63 @@
+version: 2
+jobs:
+  build:
+    machine: true
+    steps:
+      - checkout
+      - run:
+          name: Build Docker Image
+          command: make build
+  publish-rc-images:
+    machine: true
+    environment:
+      RC_DOCKER_REPO: quay.io/deisci/
+    steps:
+      - checkout
+      - run:
+          name: Log in to Quay
+          command: docker login -u "${QUAY_USERNAME}" -p "${QUAY_PASSWORD}" quay.io
+      - run:
+          name: Publish Release Candidate Images to Quay
+          command: make push-rc
+  publish-release-images:
+    machine: true
+    environment:
+      RC_DOCKER_REPO: quay.io/deisci/
+      REL_DOCKER_REPO: quay.io/deis/
+    steps:
+      - checkout
+      - run:
+          name: Log in to Quay
+          command: docker login -u "${QUAY_USERNAME}" -p "${QUAY_PASSWORD}" quay.io
+      - run:
+          name: Publish Release Images to Quay
+          command: REL_VERSION="${CIRCLE_TAG}" make push-release
+workflows:
+  version: 2
+  build-pr:
+    jobs:
+      - hold:
+          type: approval
+          filters:
+            branches:
+              ignore: master
+      - build:
+          requires:
+            - hold
+          filters:
+            branches:
+              ignore: master
+  build-master:
+    jobs:
+      - publish-rc-images:
+          filters:
+            branches:
+              only: master
+  release:
+    jobs:
+      - publish-release-images:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*(\-.+)?/
