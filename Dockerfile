@@ -1,6 +1,6 @@
 FROM docker:18.03.1-dind
 
-ENV HELM_VERSION=v2.11.0
+ENV HELM_VERSION=v2.16.1
 
 RUN \
   apk update \
