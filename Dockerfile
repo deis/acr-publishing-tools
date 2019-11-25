@@ -1,4 +1,4 @@
-FROM docker:18.03.1-dind
+FROM docker:19.03.5-dind
 
 ENV HELM_VERSION=v2.16.1
 
